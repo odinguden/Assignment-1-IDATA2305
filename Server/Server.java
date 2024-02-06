@@ -19,36 +19,46 @@ public class Server {
 			try {
 				Socket client = this.socket.accept();
 				BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-				PrintWriter output = new PrintWriter(client.getOutputStream());
+				PrintWriter output = new PrintWriter(client.getOutputStream(), true);
+				while (!client.isClosed()) {
 
-
-				int result = 0;
-				try {
-					String message = input.readLine();
-					String[] constituents = message.split(" ");
-					if (constituents.length == 3) {
-						try {
-							int number1 = Integer.parseInt(constituents[0]);
-							int number2 = Integer.parseInt(constituents[1]);
-							char operand = constituents[2].charAt(0);
-
-							result = CalculationUtil.operation(operand, number1, number2);
-						} catch (IllegalArgumentException e) {
-							e.printStackTrace();
+					int result = 0;
+					try {
+						System.out.println("Awaiting message");
+						String message = input.readLine();
+						System.out.println("Got message: " + message);
+						if (message != null) {
+							String[] constituents = message.split(" ");
+							if (constituents.length == 3) {
+								try {
+									int number1 = Integer.parseInt(constituents[0]);
+									int number2 = Integer.parseInt(constituents[1]);
+									char operand = constituents[2].charAt(0);
+	
+									result = CalculationUtil.operation(operand, number1, number2);
+								} catch (IllegalArgumentException e) {
+									e.printStackTrace();
+								}
+							}
+						} else {
+							client.close();
 						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					} finally {
+						output.println(result);
+						System.out.println("Sending " + result);
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					output.println(result);
-					input.close();
-					output.close();
-					client.close();
 				}
+				System.out.println("Closing client connection");
+				input.close();
+				output.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+
+		System.out.println("Socket closed");
 	}
 
 	public void startThreadedServer() {

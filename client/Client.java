@@ -53,6 +53,10 @@ public class Client extends Thread {
 		}
 	}
 
+	public BufferedReader getReader() {
+		return reader;
+	}
+
 	public void send(String message) throws IOException {
 		System.out.println("Sending message " + message);
 		output.println(message);
