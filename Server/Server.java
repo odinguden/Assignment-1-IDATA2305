@@ -1,136 +1,44 @@
 package Server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
 public class Server {
-	ServerSocket socket;
+	private final DatagramSocket serverSocket;
+	private byte[] buffer = new byte[256];
 
-	public Server() throws IOException {
-		this.socket = new ServerSocket(8080);
+	private final boolean isSingleThreaded;
+
+	public Server(boolean isSingleThreaded) throws SocketException {
+		this.isSingleThreaded = isSingleThreaded;
+		serverSocket = new DatagramSocket(8080);
 	}
 
-	public void startSinglethreadServer() {
-		while (!socket.isClosed()) {
-			try {
-				Socket client = this.socket.accept();
-				BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-				PrintWriter output = new PrintWriter(client.getOutputStream(), true);
-				while (!client.isClosed()) {
+	public void run() throws IOException {
+		boolean running = true;
 
-					int result = 0;
-					try {
-						System.out.println("Awaiting message");
-						String message = input.readLine();
-						System.out.println("Got message: " + message);
-						if (message != null) {
-							String[] constituents = message.split(" ");
-							if (constituents.length == 3) {
-								try {
-									int number1 = Integer.parseInt(constituents[0]);
-									int number2 = Integer.parseInt(constituents[1]);
-									char operand = constituents[2].charAt(0);
-	
-									result = CalculationUtil.operation(operand, number1, number2);
-								} catch (IllegalArgumentException e) {
-									e.printStackTrace();
-								}
-							}
-						} else {
-							client.close();
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					} finally {
-						output.println(result);
-						System.out.println("Sending " + result);
-					}
-				}
-				System.out.println("Closing client connection");
-				input.close();
-				output.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+		while (running) {
+			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+			serverSocket.receive(packet);
+
+			InetAddress address = packet.getAddress();
+			int port = packet.getPort();
+			packet = new DatagramPacket(buffer, buffer.length, address, port);
+
+			String received = new String(packet.getData(), 0, packet.getLength());
+
+			if (received.equalsIgnoreCase("end")) {
+				running = false;
+				continue;
 			}
-		}
 
-		System.out.println("Socket closed");
-	}
-
-	public void startThreadedServer() {
-		new ClientDistributor(this.socket).start();
-	}
-
-	private class ClientDistributor extends Thread {
-		private final ServerSocket socket;
-
-		public ClientDistributor(ServerSocket serverSocket) {
-			this.socket = serverSocket;
-		}
-
-		@Override
-		public void run() {
-			while (!socket.isClosed()) {
-				try {
-					Socket client = this.socket.accept();
-					this.attemptToAcceptConnection(client);
-				} catch (IOException e) {
-					if (!socket.isClosed()) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-		private void attemptToAcceptConnection(Socket client) {
-			try {
-				new ClientHandler(client).start();
-				System.out.println("Client connected");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private class ClientHandler extends Thread {
-		private final BufferedReader input;
-		private final PrintWriter output;
-
-		public ClientHandler(Socket client) throws IOException {
-
-			this.input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			this.output = new PrintWriter(client.getOutputStream(), true);
-		}
-
-		@Override
-		public void run() {
-			while (true) {
-				int result = 0;
-				try {
-					System.out.println("Awaiting message");
-					String message = input.readLine();
-					System.out.println("Got message: " + message);
-					String[] constituents = message.split(" ");
-					if (constituents.length == 3) {
-						try {
-							int number1 = Integer.parseInt(constituents[0]);
-							int number2 = Integer.parseInt(constituents[1]);
-							char operand = constituents[2].charAt(0);
-
-							result = CalculationUtil.operation(operand, number1, number2);
-						} catch (IllegalArgumentException e) {
-							e.printStackTrace();
-						}
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					output.println(result);
-				}
+			if (isSingleThreaded) {
+				new ServerCalculator(serverSocket, received, address, port).run();
+			} else {
+				new ServerCalculator(serverSocket, received, address, port).start();
 			}
 		}
 	}

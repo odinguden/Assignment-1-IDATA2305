@@ -2,8 +2,8 @@ package Server;
 
 import java.io.IOException;
 
-public class app {
+public class App {
 	public static void main(String[] args) throws IOException {
-		new Server().startSinglethreadServer();
+		new Server(false).run();
 	}
 }
