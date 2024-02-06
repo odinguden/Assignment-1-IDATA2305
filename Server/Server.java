@@ -2,9 +2,7 @@ package Server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,20 +16,49 @@ public class Server {
 
 	public void startSinglethreadServer() {
 		while (!socket.isClosed()) {
+			try {
+				Socket client = this.socket.accept();
+				BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
+				PrintWriter output = new PrintWriter(client.getOutputStream());
 
+
+				int result = 0;
+				try {
+					String message = input.readLine();
+					String[] constituents = message.split(" ");
+					if (constituents.length == 3) {
+						try {
+							int number1 = Integer.parseInt(constituents[0]);
+							int number2 = Integer.parseInt(constituents[1]);
+							char operand = constituents[2].charAt(0);
+
+							result = CalculationUtil.operation(operand, number1, number2);
+						} catch (IllegalArgumentException e) {
+							e.printStackTrace();
+						}
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					output.println(result);
+					input.close();
+					output.close();
+					client.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
 	public void startThreadedServer() {
-		new ClientDistributor(this, this.socket).start();
+		new ClientDistributor(this.socket).start();
 	}
 
 	private class ClientDistributor extends Thread {
-		private final Server server;
 		private final ServerSocket socket;
 
-		public ClientDistributor(Server server, ServerSocket serverSocket) {
-			this.server = server;
+		public ClientDistributor(ServerSocket serverSocket) {
 			this.socket = serverSocket;
 		}
 
@@ -40,7 +67,7 @@ public class Server {
 			while (!socket.isClosed()) {
 				try {
 					Socket client = this.socket.accept();
-					this.attemptToAcceptConnection(server, client);
+					this.attemptToAcceptConnection(client);
 				} catch (IOException e) {
 					if (!socket.isClosed()) {
 						e.printStackTrace();
@@ -49,9 +76,9 @@ public class Server {
 			}
 		}
 
-		private void attemptToAcceptConnection(Server server, Socket client) {
+		private void attemptToAcceptConnection(Socket client) {
 			try {
-				new ClientHandler(server, client).start();
+				new ClientHandler(client).start();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -59,15 +86,10 @@ public class Server {
 	}
 
 	private class ClientHandler extends Thread {
-		private final Socket client;
-		private final Server server;
-
 		private final BufferedReader input;
 		private final PrintWriter output;
 
-		public ClientHandler(Server server, Socket client) throws IOException {
-			this.client = client;
-			this.server = server;
+		public ClientHandler(Socket client) throws IOException {
 
 			this.input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 			this.output = new PrintWriter(client.getOutputStream());
