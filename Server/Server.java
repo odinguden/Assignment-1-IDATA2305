@@ -79,6 +79,7 @@ public class Server {
 		private void attemptToAcceptConnection(Socket client) {
 			try {
 				new ClientHandler(client).start();
+				System.out.println("Client connected");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -92,7 +93,7 @@ public class Server {
 		public ClientHandler(Socket client) throws IOException {
 
 			this.input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			this.output = new PrintWriter(client.getOutputStream());
+			this.output = new PrintWriter(client.getOutputStream(), true);
 		}
 
 		@Override
@@ -100,7 +101,9 @@ public class Server {
 			while (true) {
 				int result = 0;
 				try {
+					System.out.println("Awaiting message");
 					String message = input.readLine();
+					System.out.println("Got message: " + message);
 					String[] constituents = message.split(" ");
 					if (constituents.length == 3) {
 						try {

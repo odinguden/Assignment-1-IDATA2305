@@ -21,7 +21,7 @@ public class Client extends Thread {
 	public Client(String name) {
 		try {
 			socket = new Socket("localhost", 8080);
-			output = new PrintWriter(socket.getOutputStream());
+			output = new PrintWriter(socket.getOutputStream(), true);
 			reader = new BufferedReader(
 				new InputStreamReader(
 					socket.getInputStream()
@@ -35,7 +35,10 @@ public class Client extends Thread {
 			System.out.println("An ioException occurred");
 			e.printStackTrace();
 		}
+	}
 
+	@Override
+	public void run() {
 		while (isConnected) {
 			String messageIn = null;
 			try {
@@ -48,11 +51,12 @@ public class Client extends Thread {
 				System.out.println(messageIn);
 			}
 		}
-
 	}
 
 	public void send(String message) throws IOException {
-		output.println(message.getBytes());
+		System.out.println("Sending message " + message);
+		output.println(message);
+		System.out.println("Message sent");
 	}
 
 	public void stopSocketCommunication() throws IOException {
