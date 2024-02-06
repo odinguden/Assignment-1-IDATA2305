@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 /**
@@ -12,30 +16,41 @@ import java.net.UnknownHostException;
  */
 public class Client extends Thread {
 	private boolean isConnected;
-	private Socket socket;
+	private DatagramSocket socket;
+	private InetAddress address;
 	private PrintWriter output;
 	private BufferedReader reader;
-
+	private byte[] buf;
 
 
 	public Client(String name) {
 		try {
-			socket = new Socket("localhost", 8080);
-			output = new PrintWriter(socket.getOutputStream(), true);
-			reader = new BufferedReader(
-				new InputStreamReader(
-					socket.getInputStream()
-				)
-			);
-			isConnected = true;
-		} catch (UnknownHostException e) {
-			System.out.println("Could not find Host");
+			socket = new DatagramSocket();
+			address = InetAddress.getLocalHost();
+		} catch (SocketException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			System.out.println("An ioException occurred");
+		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
 	}
+
+	public void send(String msg) throws IOException {
+        buf = msg.getBytes();
+
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 8080);
+
+        socket.send(packet);
+    }
+
+	public String recive() throws IOException {
+		DatagramPacket packet;
+		packet = new DatagramPacket(buf, buf.length);
+        socket.receive(packet);
+        String received = new String(
+          packet.getData(), 0, packet.getLength());
+        return received;
+	}
+
 
 	@Override
 	public void run() {
@@ -51,16 +66,6 @@ public class Client extends Thread {
 				System.out.println(messageIn);
 			}
 		}
-	}
-
-	public BufferedReader getReader() {
-		return reader;
-	}
-
-	public void send(String message) throws IOException {
-		System.out.println("Sending message " + message);
-		output.println(message);
-		System.out.println("Message sent");
 	}
 
 	public void stopSocketCommunication() throws IOException {
