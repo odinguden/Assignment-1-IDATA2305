@@ -3,13 +3,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+/**
+ * This class is the client duh
+ */
 public class Client extends Thread {
 	private boolean isConnected;
 	private Socket socket;
-	private OutputStream output;
+	private PrintWriter output;
 	private BufferedReader reader;
 
 
@@ -17,7 +21,7 @@ public class Client extends Thread {
 	public Client(String name) {
 		try {
 			socket = new Socket("localhost", 8080);
-			output = socket.getOutputStream();
+			output = new PrintWriter(socket.getOutputStream());
 			reader = new BufferedReader(
 				new InputStreamReader(
 					socket.getInputStream()
@@ -48,7 +52,7 @@ public class Client extends Thread {
 	}
 
 	public void send(String message) throws IOException {
-		output.write(message.getBytes());
+		output.println(message.getBytes());
 	}
 
 	public void stopSocketCommunication() throws IOException {

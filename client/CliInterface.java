@@ -10,9 +10,10 @@ public class CliInterface {
 
 	public CliInterface() {
 		client = new Client("Odin");
+		client.start();
 		isOn = true;
 		BufferedReader reader = new BufferedReader( new InputStreamReader(System.in));
-		
+
 		while (isOn) {
 			String line = null;
 			try {
