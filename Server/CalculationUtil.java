@@ -97,6 +97,6 @@ public class CalculationUtil {
 	 * @return the result of performing the operation on a and b
 	 */
 	public static int power(int a, int b) {
-		return a ^ b;
+		return (int) Math.pow(a, b);
 	}
 }

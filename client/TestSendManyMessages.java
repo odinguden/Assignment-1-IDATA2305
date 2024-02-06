@@ -2,33 +2,46 @@ package client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Random;
 
 public class TestSendManyMessages {
+	private static char[] operands = new char[]{
+		'A', 'S', 'M', 'D', 'P'
+	};
+
+	private final static int testAmount = 100;
+	private final static int operations = 100;
+
 	public static void main(String[] args) throws IOException {
-		Client client1 = new Client("a");
-		Client client2 = new Client("b");
-		Client client3 = new Client("c");
+		Client client = new Client();
 
-		BufferedReader reader1 = client1.getReader();
-		BufferedReader reader2 = client2.getReader();
-		BufferedReader reader3 = client3.getReader();
+		long sumTime = 0;
+		int sumRuns = 0;
 
-		long startTime = System.currentTimeMillis();
+		for (int t = 0; t < testAmount; t++) {
+			long startTime = System.nanoTime();
 
-		client1.send("30 30 A");
-		client2.send("50 30 S");
-		client3.send("20 40 M");
+			Random random = new Random();
 
-		System.out.println(reader1.readLine());
-		client1.stopSocketCommunication();
-		System.out.println(reader2.readLine());
-		client2.stopSocketCommunication();
-		System.out.println(reader3.readLine());
-		client3.stopSocketCommunication();
+			for (int i = 0; i < operations; i++) {
+				client.send(""
+					+ random.nextInt(100) + " "
+					+ random.nextInt(1, 100) + " "
+					+ operands[random.nextInt(operands.length - 1)]);
+			}
+			for (int i = 0; i < operations; i++) {
+				client.recive();
+			}
 
-		long endTime = System.currentTimeMillis();
+			long endTime = System.nanoTime();
 
-		long deltaTime = endTime - startTime;
-		System.out.println("Took " + deltaTime + "ms");
+			double deltaTime = ((double)(endTime - startTime)) / ((double) 1000000);
+			System.out.println("Took " + deltaTime + "ms");
+
+			sumTime += deltaTime;
+			sumRuns++;
+		}
+
+		System.out.println("Average runtime: " + (sumTime / (double) sumRuns) + "ms");
 	}
 }

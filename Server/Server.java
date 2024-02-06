@@ -8,7 +8,7 @@ import java.net.SocketException;
 
 public class Server {
 	private final DatagramSocket serverSocket;
-	private byte[] buffer = new byte[256];
+	private byte[] buffer = new byte[1024];
 
 	private final boolean isSingleThreaded;
 

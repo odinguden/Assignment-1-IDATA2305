@@ -23,7 +23,7 @@ public class Client extends Thread {
 	private byte[] buf;
 
 
-	public Client(String name) {
+	public Client() {
 		try {
 			socket = new DatagramSocket();
 			address = InetAddress.getLocalHost();
@@ -47,7 +47,7 @@ public class Client extends Thread {
 		packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
         String received = new String(
-          packet.getData(), 0, packet.getLength());
+        packet.getData(), 0, packet.getLength());
         return received;
 	}
 
@@ -63,7 +63,6 @@ public class Client extends Thread {
 				e.printStackTrace();
 			}
 			if (messageIn != null) {
-				System.out.println(messageIn);
 			}
 		}
 	}

@@ -9,7 +9,7 @@ public class CliInterface {
 	private boolean isOn;
 
 	public CliInterface() {
-		client = new Client("Odin");
+		client = new Client();
 		client.start();
 		isOn = true;
 		BufferedReader reader = new BufferedReader( new InputStreamReader(System.in));
@@ -19,12 +19,12 @@ public class CliInterface {
 			try {
 				line = reader.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			if (line != null) {
 				try {
 					client.send(line);
+					System.out.println( client.recive());
 				} catch (IOException e) {
 					System.out.println("Could not send");
 					e.printStackTrace();
