@@ -34,6 +34,12 @@ public class ServerCalculator extends Thread {
 	}
 
 	private int calculate() throws NumberFormatException {
+		try {
+			sleep(1);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		int result = 0;
 		if (this.command == null) return result;
 
